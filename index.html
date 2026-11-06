@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Permintaan Pembelian Spare Part - PT Inhutani I</title>
+<style>
+:root{
+  color-scheme:light;
+  --putih:#ffffff; --latar:#f7faf4; --teks:#1f2a24; --mu:#66736b; --garis:#dfe8d8;
+  --hijau:#7dc242;      /* hijau daun */
+  --hijau-tua:#00663c;  /* hijau tua logo */
+  --cokelat:#8a5a35;    /* cokelat kayu */
+  --cokelat-muda:#f4ece4;
+  --er:#b3261e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--latar);color:var(--teks);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+.w{max-width:920px;margin:0 auto}
+.head{display:flex;align-items:center;gap:16px;background:var(--putih);border:1px solid var(--garis);border-bottom:4px solid var(--hijau);border-radius:12px;padding:14px 18px;margin-bottom:16px}
+.head img{width:72px;height:auto;flex:none}
+.head h1{font-size:19px;margin:0;color:var(--hijau-tua);line-height:1.25}
+.head p{margin:2px 0 0;font-size:13px;color:var(--cokelat)}
+.card{background:var(--putih);border:1px solid var(--garis);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--cokelat);margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--cokelat-muda)}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:4px}
+input,select{width:100%;padding:9px 10px;border:1px solid #cfd9c8;border-radius:8px;background:#fff;color:var(--teks);font:inherit}
+input:focus,select:focus{outline:2px solid var(--hijau);outline-offset:0;border-color:var(--hijau)}
+.row{display:grid;grid-template-columns:2.2fr .8fr .9fr 1.8fr auto;gap:8px;align-items:end;padding:10px 0;border-top:1px dashed var(--garis)}
+.row:first-of-type{border-top:0}
+button{padding:9px 14px;border-radius:8px;border:1px solid var(--hijau-tua);background:#fff;color:var(--hijau-tua);font:inherit;cursor:pointer}
+button:hover{background:#f1f8ea}
+.pri{background:var(--hijau-tua);border-color:var(--hijau-tua);color:#fff;font-weight:600;padding:11px 20px}
+.pri:hover{background:#005432}
+.pri:disabled{opacity:.6;cursor:wait}
+.x{border-color:var(--cokelat);color:var(--cokelat)}
+.x:hover{background:var(--cokelat-muda)}
+.hint{font-size:12px;color:var(--mu);margin-top:4px}
+#msg{margin-top:12px;font-weight:600}
+@media(max-width:640px){
+  .row{grid-template-columns:1fr 1fr}
+  .row>div:first-child,.row>div:nth-child(4){grid-column:1/-1}
+  .head img{width:56px}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div class="head">
+  <img src="logo-inhutani.png" alt="Logo Inhutani I">
+  <div>
+    <h1>Form Permintaan Pembelian Spare Part</h1>
+    <p>PT Inhutani I</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Data permintaan</h2>
+  <div class="g">
+    <div><label>Tanggal Pengajuan</label><input type="date" id="tgl"></div>
+    <div><label>Jam Pengajuan</label><input type="time" id="jam"></div>
+    <div><label>Nama Pemohon</label><input id="nama" placeholder="Nama"></div>
+    <div><label>Bagian/Divisi</label><select id="div"><option value="">Pilih...</option></select></div>
+    <div><label>Tanggal Barang Dibutuhkan</label><input type="date" id="tbutuh">
+      <div class="hint">Dipakai untuk menentukan prioritas pembelian.</div></div>
+    <div class="full"><label>Alasan / catatan prioritas (opsional)</label>
+      <input id="alasan" placeholder="Contoh: stok habis, mesin berhenti, untuk perawatan terjadwal"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Daftar barang</h2>
+  <div id="items"></div>
+  <button type="button" onclick="addRow()">+ Tambah barang</button>
+</div>
+
+<button class="pri" id="kirim" onclick="kirim()">Kirim Permintaan</button>
+<div id="msg"></div>
+
+</div>
+
+<datalist id="dl"></datalist>
+
+<datalist id="dk"><option value="u/ Produksi"><option value="u/ Packing"><option value="u/ Maintenance"><option value="u/ KD"><option value="u/ IK"><option value="u/ Kantor"><option value="u/ Kantor Atas"><option value="u/ Pengasahan"><option value="u/ Mesin Moulding"><option value="u/ Mesin GF"><option value="u/ Mesin FJ Ishita"><option value="u/ Mesin FJ lida"><option value="u/ Forklift FD 35/03"><option value="u/ Forklift FD 35/04"><option value="u/ Pick Up"><option value="u/ Perawatan"><option value="u/ Blower Produksi"><option value="u/ Gudang"><option value="u/ Mess"><option value="u/ Umum"></datalist>
+
+<script>
+// ====== PENGATURAN ======
+// URL Web App Google Apps Script (berakhiran /exec)
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhnUUG3oKJuM8JXi36RMEmugYdyVG7_EzuxXQJauIbeWmCbbUu3jVFk0Hj3yfSthaO/exec";
+// Daftar bagian/divisi (dropdown). Sesuaikan dengan nama resmi di perusahaan.
+const DIVISI = ["Produksi","Gudang","Maintenance","Packing","Pengasahan","Kantor","Umum","Lainnya"];
+const SATUAN = ["Pcs","Roll","Unit","Set","Mtr","Ltr","Kg","Dus","Krds","Box","Pack","Pak","Paket","Btl","Botol","Kaleng","Galon","Sak","Lusin","Bungkus","Batang"];
+// Katalog: nama barang -> satuan & keterangan bawaan. Tambah baris sendiri.
+const KATALOG = {
+  "Lem G":{s:"Pcs",k:"u/ Produksi"},
+  "Lem CA N Bond":{s:"Pcs",k:"u/ Produksi"},
+  "Plastik Film":{s:"Roll",k:"u/ Packing"},
+  "Straping Band":{s:"Roll",k:"u/ Packing"},
+  "Straping Band Kuning":{s:"Roll",k:"u/ Packing"},
+  "Tali Straping Bang Kuning Kecil":{s:"Pcs",k:"u/ IK Gresik"},
+  "Klem Galvanis":{s:"Pcs",k:"u/ Packing"},
+  "Karton Single Face":{s:"Kg",k:"u/ Packing"},
+  "Plastik Siku (Corner)":{s:"Kg",k:"u/ Packing"},
+  "Paku 2\"":{s:"Kg",k:"u/ Packing"},
+  "Van Belt":{s:"Pcs",k:"u/ Mesin Sander"},
+  "Variable Speed Belt":{s:"Pcs",k:"u/ Mesin Moulding IK"},
+  "Bearing":{s:"Pcs",k:"u/ Mesin Moulding"},
+  "Oil Seal":{s:"Pcs",k:"u/ FD 35/04"},
+  "Seal Forklift":{s:"Pcs",k:"u/ Forklift FD 03"},
+  "Baut":{s:"Pcs",k:"u/ FD 35/04"},
+  "Mur Baut":{s:"Pcs",k:"u/ Produksi"},
+  "Thiner B":{s:"Ltr",k:"u/ Umum"},
+  "Kuas 3\"":{s:"Pcs",k:"u/ Umum"},
+  "Cleaning AC":{s:"Unit",k:"u/ Kantor Atas"},
+  "Tambah Freon":{s:"Unit",k:"u/ Kantor Atas"},
+  "Pipa AC":{s:"Mtr",k:"u/ Kantor Atas"},
+  "Masker":{s:"Box",k:"u/ Produksi"},
+  "Sarung Tangan":{s:"Lusin",k:"u/ Produksi"},
+  "Krayon":{s:"Pack",k:"u/ Produksi"},
+  "Meteran 5 Mtr":{s:"Pcs",k:"u/ Produksi"},
+  "Kalsium":{s:"Sak",k:"u/ Produksi"},
+  "Kain Majun":{s:"Kg",k:"u/ Produksi"},
+  "Skun 50-10":{s:"Pcs",k:"u/ Blower Produksi"},
+  "Inlite LED Capsule 50 W":{s:"Pcs",k:"u/ Kantor"},
+  "Fitting Besi E-27":{s:"Pcs",k:"u/ Kantor"},
+  "Philips Ecofit Batten 16 W":{s:"Pcs",k:"u/ Kantor"},
+  "Broco Fitting Plavon":{s:"Pcs",k:"u/ Produksi"},
+  "Amplas":{s:"Mtr",k:"u/ Kantor"},
+  "Kertas A4":{s:"Krds",k:"u/ Kantor Atas"},
+  "PI Bond 3436":{s:"Pcs",k:"u/ Gudang"},
+  "WD 40":{s:"Pcs",k:"u/ Pengasahan"},
+  "Water Coolant":{s:"Ltr",k:"u/ Pengasahan"},
+  "Minyak Rem Prestone":{s:"Btl",k:"u/ Forklift FD 35/03"},
+  "Tambal Ban":{s:"Pcs",k:"u/ Forklift FD 35/04"},
+  "Bongkar Pasang Ban":{s:"Pcs",k:"u/ Forklift FD 03"},
+  "Selang":{s:"Mtr",k:"u/ KD"},
+  "Klem Selang":{s:"Pcs",k:"u/ KD"},
+  "Asitelin":{s:"Botol",k:"u/ Maintenance"},
+  "Oksigen":{s:"Botol",k:"u/ Maintenance"},
+  "Olie Turalik 43":{s:"Ltr",k:"u/ Perawatan"},
+  "Rewinding Dinamo 3 Kw":{s:"Pcs",k:"u/ KD"},
+  "Jarum MC Bollmann":{s:"Pcs",k:"u/ KD"},
+  "Timer Theben":{s:"Pcs",k:"u/ KD"},
+  "Kontaktor":{s:"Pcs",k:"u/ Mesin GF"},
+  "Bishilite # 12 G":{s:"Pcs",k:"u/ IK"},
+  "Dempul":{s:"Pak",k:"u/ Produksi"}
+};
+// =========================
+const $=id=>document.getElementById(id);
+DIVISI.forEach(d=>$("div").add(new Option(d,d)));
+$("dl").innerHTML=Object.keys(KATALOG).map(n=>`<option value="${n.replace(/"/g,"&quot;")}">`).join("");
+const now=new Date(),p=n=>String(n).padStart(2,"0");
+const hariIni=`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}`;
+$("tgl").value=hariIni;
+$("tbutuh").min=hariIni;
+$("jam").value=`${p(now.getHours())}:${p(now.getMinutes())}`;
+
+function addRow(){
+  const r=document.createElement("div");r.className="row";
+  r.innerHTML=`<div><label>Nama Barang</label><input class="n" list="dl" placeholder="Ketik / pilih barang"></div>
+  <div><label>Jumlah</label><input class="j" type="number" min="1" value="1"></div>
+  <div><label>Satuan</label><select class="s">${SATUAN.map(s=>`<option>${s}</option>`).join("")}</select></div>
+  <div><label>Keterangan</label><input class="k" list="dk" placeholder="u/ ..."></div>
+  <button type="button" class="x" title="Hapus" onclick="this.parentNode.remove()">&#10005;</button>`;
+  r.querySelector(".n").addEventListener("input",e=>{
+    const m=KATALOG[e.target.value];
+    if(m){r.querySelector(".s").value=m.s;r.querySelector(".k").value=m.k;}
+  });
+  $("items").appendChild(r);
+}
+addRow();
+
+async function kirim(){
+  const msg=$("msg");msg.style.color="var(--er)";
+  const items=[...document.querySelectorAll("#items .row")].map(r=>({
+    nama:r.querySelector(".n").value.trim(),
+    jumlah:r.querySelector(".j").value,
+    satuan:r.querySelector(".s").value,
+    ket:r.querySelector(".k").value.trim()
+  })).filter(i=>i.nama);
+  if(!$("nama").value.trim()||!$("div").value){msg.textContent="Isi nama pemohon dan bagian/divisi.";return;}
+  if(!$("tbutuh").value){msg.textContent="Isi tanggal barang dibutuhkan.";return;}
+  if($("tbutuh").value<$("tgl").value){msg.textContent="Tanggal dibutuhkan tidak boleh sebelum tanggal pengajuan.";return;}
+  if(!items.length){msg.textContent="Isi minimal satu barang.";return;}
+  const data={tanggal:$("tgl").value,jam:$("jam").value,nama:$("nama").value.trim(),divisi:$("div").value,
+    tbutuh:$("tbutuh").value,alasan:$("alasan").value.trim(),items};
+  $("kirim").disabled=true;msg.style.color="var(--mu)";msg.textContent="Mengirim...";
+  try{
+    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(data)});
+    msg.style.color="var(--hijau-tua)";msg.textContent="Terkirim \u2714 ("+items.length+" barang)";
+    $("items").innerHTML="";addRow();$("alasan").value="";$("tbutuh").value="";
+  }catch(e){msg.style.color="var(--er)";msg.textContent="Gagal mengirim. Cek koneksi internet lalu coba lagi.";}
+  $("kirim").disabled=false;
+}
+</script>
+</body>
+</html>
